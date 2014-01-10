@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <style type="text/css">
+        body {
+            background-color:darkgreen;
+        }
+
+    </style>
+    <script src="framework/iCanvas_v1_2_1.js"></script>
+    <script src="ctrls/ctrls.js"></script>
+    <script type="text/javascript">
+        window.onload = function () {
+            var wrapper = iCanvas.createWrapper("container");
+
+            //establish ctrl instances
+            var _back = iCanvas.ctrls.rect(wrapper, 100, 100, 0, 0, "white");
+            var _header = iCanvas.ctrls.rect(wrapper, 100, 10, 0, 0, "#f0f0f0");
+            var _switchLine = iCanvas.ctrls.rect(wrapper, 100, 6, 0, 0, "#7e7e7e");
+            var _floatLayer = iCanvas.ctrls.rect(wrapper, 30, "100+1px", 0, 0, "white");
+            var _btnLeft = iCanvas.ctrls.rect(wrapper, 30, 100, 0, 0, "transparent");
+            var _btnRight = iCanvas.ctrls.rect(wrapper, 30, 100, 0, 0, "transparent");  
+            var _qTxt = iCanvas.ctrls.txt(wrapper, 0, 0, 50, 50, "green", "Quarterly");
+            var _yTxt = iCanvas.ctrls.txt(wrapper, 0, 0, 50, 50, "green", "Year To Date");
+            
+            var _axisBack = iCanvas.ctrls.rect(wrapper, 100, 84, 0, 0, "white");
+            var _axis = new axis(wrapper, 100, 90, 0, 10,"yellow");
+            _axis.applyRange(24, 0);
+            _axis.setLineCount(4);
+            _axis.applyBoundary(10, 95, 5, 95, 6, 78);
+            _axis.applyXLabs("Q113");
+            _axis.applyXLabs("Q213");
+            _axis.applyXLabs("Q313");
+            _axis.applyXLabs("Q413");
+
+            var _bars = new bars(wrapper,100,100,0,0);
+            _bars.applyAxis(_axis);
+            _bars.applyColors("#00b193","#008e76");
+            _bars.applySingleValue("Q113", 8);
+            _bars.applySingleValue("Q213", 15);
+            _bars.applySingleValue("Q313", 4);
+            _bars.applySingleValue("Q413", 24);
+
+            //set basic properties
+            _floatLayer.setPosition("absolute");
+            _btnRight.setFloat("left");
+            _yTxt.applyFontColor("white");
+            
+            //build ctrl hierachies
+            _back.appendChild(_header);
+            _back.appendChild(_switchLine);
+            _back.appendChild(_axisBack);
+            _axisBack.appendChild(_axis);
+            _switchLine.appendChild(_floatLayer);
+            _switchLine.appendChild(_btnLeft);
+            _switchLine.appendChild(_btnRight);
+            _btnLeft.appendChild(_qTxt);
+            _btnRight.appendChild(_yTxt);
+            
+            wrapper.initRoot(_back);
+            wrapper.render();
+
+            document.getElementById("zin").onclick = function () {
+                wrapper.changeWH(-5, -5);
+                wrapper.render();
+            }
+
+            document.getElementById("zout").onclick = function () {
+                wrapper.changeWH(5, 5);
+                wrapper.render();
+            }
+            var _tool = iCanvas.getTools();
+            var _txt = _tool.RPN("4+6px*{5}-((3+1)*2)");
+
+            document.getElementById("exp").value=_txt.join("");
+
+        }
+    </script>
+
+
+    <title></title>
+</head>
+<body>
+     <div>
+        <svg width="400px" height="320px" version="1.1" id="container">
+            
+        </svg>
+    </div>
+    <input type="button" value="Zoom In" id="zin"/>
+    <input type="button" value="Zoom Out" id="zout"/>
+    <input type="text" id="exp"/>
+</body>
+</html>
