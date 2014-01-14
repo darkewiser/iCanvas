@@ -1,7 +1,9 @@
 ﻿/*import framwork v1.2.1 in advance*/
+/*All controls are aligned to the axis Box(the virtual box), not the axis itself*/
 var axis = iCanvas.createNewCtrl(function () {
     this.type = "axis";
     this.applyBoundary(0, 100);
+    //axis framework work which indecates the boundaries of the valid axis area
     this.Box = iCanvas.ctrls.vbox(this.wrapper);
     this.appendChild(this.Box);
     //reference of the lines
@@ -35,7 +37,7 @@ var axis = iCanvas.createNewCtrl(function () {
                 function setFontSize() {
                     this.applyFontSize(that.H / 15);
                 }
-                var _Cons = iCanvas.getCONS();
+                var _Cons = this.CONS;
                 var _txtCons = _Cons.TXT;
                 //process vertical data
                 var _lineS = this.lineSpace[this.selectdRange];
@@ -58,19 +60,19 @@ var axis = iCanvas.createNewCtrl(function () {
                     var _s = ci.s;
                     var _e = ci.e;
                     var _mp = ci.mp;
-                    var _xTxt = iCanvas.ctrls.txt(this.wrapper, 0, 0, _mp.c, this.EY, "red", this.XLabs[i]);
+                    var _xTxt = iCanvas.ctrls.txt(this.wrapper, 0, 0, _mp.c, 100, "red", this.XLabs[i]);
                     _xTxt.setPosition(_Cons.POSITION.ABSOLUTE);
                     _xTxt.attachFontHandler(function () {
                         setFontSize.apply(this);
                         this.applyDisY(this.fontSize + 3);
                     });
                     _xTxt.applyAlign(_txtCons.ALIGN.MIDDLE);
-                    this.appendChild(_xTxt);
+                    this.Box.appendChild(_xTxt);
                 }
             }
             if (!_areCtrlsAdded) {
                 for (var i = 0, ci; ci = this.ctrls[i]; i++) {
-                    this.appendChild(ci);
+                    this.Box.appendChild(ci);
                 }
                 _areCtrlsAdded = true;
             }
@@ -118,18 +120,12 @@ axis.prototype.setLabSpace = function () {
     if (this.XLabs == undefined) { return; }
     //calculate the solts
     var _soltDiff = iCanvas.newExp(this.EAX).SUB(this.SAX).DIV("{" + this.XLabs.length + "}");
-    var _halfSoltDiff = iCanvas.newExp(_soltDiff).DivNum(2);
+    var _halfSoltDiff = iCanvas.newExp(_soltDiff).DIV("{2}");
     this.solts = [];
-    var _start = iCanvas.newExp(this.SAX.toString());
-    var _end = iCanvas.newExp(_start).ADD(_soltDiff);
-
     for (var i = 0; i < this.XLabs.length; i++) {
-        this.solts.push({ s: _start, e: _end, diff: _soltDiff, mp: iCanvas.newExp(_start).ADD(_halfSoltDiff) });
-        if (_end.c == this.EAX) {
-            break;
-        }
-        _start = iCanvas.newExp(_end);
-        _end = (i == (this.XLabs.length - 2)) ? iCanvas.newExp(this.EAX.toString()) : (_end.ADD(_soltDiff));
+        var _start = iCanvas.newExp(_soltDiff).MulNum(i).ADD(this.SAX);
+        var _end = iCanvas.newExp(_soltDiff).MulNum(i + 1).ADD(this.SAX);
+        this.solts.push({ s: _start, e: _end, diff: _soltDiff, mp: _start.ADD(_halfSoltDiff) });
     }
 }
 axis.prototype.applyConfig = function (config, index) {
@@ -148,9 +144,9 @@ axis.prototype.applyXLabs = function (value) {
     }
 }
 axis.prototype.applyBoundary = function (sax, eax, sx, ex, sy, ey) {
-    //start available x, end available x
-    //start x, end x
-    //start y, end y
+    //start available x, end available x. Caculated based on axis virtual box
+    //start x, end x. Caculated based on axis
+    //start y, end y. Caculated based on axis
     this.SAX = sax;
     this.EAX = eax;
     this.SX = sx == undefined ? 0 : sx;
@@ -164,9 +160,9 @@ axis.prototype.attachCtrl = function (ctrl) {
 axis.prototype.getUnit = function (index) {
     var _ind = index == undefined ? 0 : index;
     var _range = this.Range[_ind];
-    var _start = this.SY;
-    var _end = this.EY;
-    var _volume = iCanvas.newExp(_end).SUB(_start);
+    var _start = 100;
+    var _end = 0;
+    var _volume = iCanvas.newExp(100);
     var _unit = _volume.DivNum(_range.max - _range.min);
     this.UnitExps[_ind] = _unit;
     return _unit;
@@ -174,7 +170,7 @@ axis.prototype.getUnit = function (index) {
 axis.prototype.getTopByValue = function (value) {
     var _u = this.UnitExps[this.selectdRange];
     var _max = this.Range[this.selectdRange].max;
-    return iCanvas.newExp("{" + (_max - value) + "}").MUL(_u).ADD(this.SY).SUB(this.lineWidth).c;
+    return iCanvas.newExp("{" + (_max - value) + "}").MUL(_u).SUB(this.lineWidth).c;
 
 }
 axis.prototype.lineWidth = "1px";
@@ -184,8 +180,8 @@ axis.prototype.labPrefix = "$";
 
 var bars = iCanvas.createNewCtrl(function () {
     this.type = "bars";
-    this.singleW = 10;
-    var _Cons = iCanvas.getCONS();
+    this.singleW = 11;
+    var _Cons = this.CONS;
     this.setPosition(_Cons.POSITION.ABSOLUTE);
     this.GROUP = iCanvas.ctrls.g(this.wrapper, 100, 100, 0, 0);
     this.GROUP.setPosition(_Cons.POSITION.ABSOLUTE);
@@ -204,7 +200,7 @@ var bars = iCanvas.createNewCtrl(function () {
             for (var i in this.items) {
                 var _single = this.items[i];
                 var _h = _exp("{" + _single.l + "}").MUL(_u).c;
-                var _dx = this.axis.solts[_seed].mp.SUB(_exp(this.singleW).DivNum(2)).c;
+                var _dx = _exp(this.axis.solts[_seed].mp).SUB(_exp(this.singleW).DivNum(2)).c;
                 var _dy = this.axis.getTopByValue(_single.s + _single.l);
                 var _singleBar = iCanvas.ctrls.rect(this.wrapper, this.singleW, _h, _dx, _dy, this.backC, { obj: this.GROUP, ctrl: "ctrl_g" });
                 //deal with events
@@ -257,3 +253,52 @@ bars.prototype.applyColors = function (backC, hoverC) {
 }
 
 
+var line = iCanvas.createNewCtrl(function () {
+    this.type = "line";
+    var _Cons = this.CONS;
+    this.setPosition(_Cons.POSITION.ABSOLUTE);
+    var _rendered = false;
+    this.lineWidth = 3;
+    this.radius = 2;
+    this.onRender(function (x, y) {
+        this.caculateSelf();
+        if (!_rendered) {
+            var _seed = 0;
+            var _path = iCanvas.ctrls.path(this.wrapper, 100, this.lineWidth, 0, 0, this.c);
+            _path.setPosition(_Cons.POSITION.ABSOLUTE);
+            for (var i in this.items) {
+                var _val = this.items[i];
+                var _dx = this.axis.solts[_seed].mp.c;
+                var _dy = this.axis.getTopByValue(_val);
+                _path.getPoints(_dx, _dy);
+                this.appendChild(_path);
+                var _node = iCanvas.ctrls.circle(this.wrapper, this.radius, this.lineWidth, _dx, _dy, this.c);
+                _node.setPosition(_Cons.POSITION.ABSOLUTE);
+                this.appendChild(_node);
+                _seed++;
+            }
+        }
+
+    });
+});
+
+line.prototype.applyAxis = function (axis, cordIndex) {
+    this.axis = axis;
+    axis.attachCtrl(this);
+    //in case of multiple cordinations in the axis, the cordIndex is designed to specify a sertain one
+    var _rangeInd = cordIndex == undefined ? 0 : cordIndex;
+    this.Range = axis.Range[_rangeInd];
+    this.RangeIndex = _rangeInd;
+}
+
+line.prototype.applySingleValue = function (key, value) {
+    if (!this.items) {
+        this.items = {};
+    }
+    this.items[key] = value;
+}
+
+line.prototype.applyLineAndCircleWidth = function (lw, r) {
+    this.lineWidth = lw;
+    this.radius = r;
+}

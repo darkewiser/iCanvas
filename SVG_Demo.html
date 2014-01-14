@@ -27,7 +27,7 @@
             var _axis = new axis(wrapper, 100, 90, 0, 10,"yellow");
             _axis.applyRange(24, 0);
             _axis.setLineCount(4);
-            _axis.applyBoundary(10, 95, 5, 95, 6, 78);
+            _axis.applyBoundary(6, 95, 5, 95, 6, 78);
             _axis.applyXLabs("Q113");
             _axis.applyXLabs("Q213");
             _axis.applyXLabs("Q313");
@@ -37,9 +37,16 @@
             _bars.applyAxis(_axis);
             _bars.applyColors("#00b193","#008e76");
             _bars.applySingleValue("Q113", 8);
-            _bars.applySingleValue("Q213", 15);
-            _bars.applySingleValue("Q313", 4);
-            _bars.applySingleValue("Q413", 24);
+            _bars.applySingleValue("Q213", 9);
+            _bars.applySingleValue("Q313", 5);
+            _bars.applySingleValue("Q413", 6);
+
+            var _line = new line(wrapper, 100, 100, 0, 0, "#ffd800");
+            _line.applyAxis(_axis);
+            _line.applySingleValue("Q113", 17);
+            _line.applySingleValue("Q213", 19);
+            _line.applySingleValue("Q313", 20);
+            _line.applySingleValue("Q413", 22);
 
             //set basic properties
             _floatLayer.setPosition("absolute");

@@ -310,6 +310,9 @@ var iCanvas = function () {
     exp.prototype.DivNum = function (value) {
         return this.DIV("{" + value + "}");
     }
+    exp.prototype.MulNum = function (value) {
+        return this.MUL("{" + value + "}");
+    }
 
 
     //inherit prototype
@@ -419,6 +422,7 @@ var iCanvas = function () {
         //Bind events
         this.Handlers = new evtCollection(this);
     }
+    ctrl.prototype.CONS = CONS;
     ctrl.prototype.onRender = function (func) {
         this._renderHandler.attach(func);
     }
@@ -541,6 +545,7 @@ var iCanvas = function () {
            
         }
     }
+
     //extend the base ctrl
     function NewCtrl(func) {
         var _temp = function (wrapper, w, h, l, t, c, txt,pDom) {
@@ -611,6 +616,7 @@ var iCanvas = function () {
     TXT.prototype.attachFontHandler = function (func) {
         this.fontHandler.attach(func);
     }
+
     var LINE = NewCtrl(function (pDom) {
         this.type = "line";
         this.onRender(
@@ -631,6 +637,34 @@ var iCanvas = function () {
            }
        );
     });
+
+    var CIRCLE = NewCtrl(function (pDom) {
+        this.type = "circle";
+        this.onRender(
+           function (x, y) {
+               this.wrapper.circle(this, "ctrl_circle",x,y, pDom);
+           }
+       );
+    });
+
+    CIRCLE.prototype.applyBorder = function (color,width) {
+        this.borderC = color;
+        this.borderW = width;
+    }
+
+    var PATH = NewCtrl(function (pDom) {
+        this.type = "path";
+        this.points = [];
+        this.onRender(
+           function (x, y) {
+               this.wrapper.path(this, "ctrl_path", x, y, this.points, pDom);
+           }
+       );
+    });
+
+    PATH.prototype.getPoints = function (x,y) {
+        this.points.push({ x: x, y: y });
+    }
 
     function GetOrCreateDom(ctrl, id,key,parent){
         var _dom = ctrl[id];
@@ -718,32 +752,39 @@ var iCanvas = function () {
     }
 
     SVGWrapper.prototype.circle = function (ctrl, id, x, y, pDom) {
-        var _dom = ctrl[id];
-        if (!_dom) {
-            _dom = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-            if (pDom) {
-                pDom.obj[pDom.ctrl].appendChild(_dom);
-            }
-            else {
-                this.svg.appendChild(_dom);
-            }
-            ctrl[id] = _dom;
-        }
+        var _dom = GetOrCreateDom(ctrl, id, "circle", pDom ? pDom.obj[pDom.ctrl] : this.svg);
         var _result = ctrl.caculateSelf();
         var _color = ctrl.c ? ctrl.c : Config.CIRCLE.Color;
-        var _borderColor = ctrl.borderC ? ctrl.borderC : Config.CIRCLE.BorderColor;
-        var _borderWidth = ctrl.borderW ? ctrl.borderW : Config.CIRCLE.BorderWidth;
+        var _borderWidth = ctrl.borderW != undefined ? ctrl.borderW : 0;
+        var _borderColor = _borderWidth == 0 ? undefined : (ctrl.borderC ? ctrl.borderC : Config.CIRCLE.BorderColor);
+        
         _dom.setAttribute("r", Math.max(_result.w, _result.h));
         _dom.setAttribute("cx", x + _result.l);
         _dom.setAttribute("cy", y + _result.t);
         _dom.setAttribute("fill", _color);
-        _dom.setAttribute("stroke", _borderColor);
+        if (_borderColor !== undefined) {
+            _dom.setAttribute("stroke", _borderColor);
+        }
         _dom.setAttribute("stroke-width", _borderWidth);
     }
 
-
-
-
+    SVGWrapper.prototype.path = function (ctrl, id, x, y, points, pDom) {
+        var _dom = GetOrCreateDom(ctrl, id, "path", pDom ? pDom.obj[pDom.ctrl] : this.svg);
+        var _result = ctrl.caculateSelf();
+        var _color = ctrl.c ? ctrl.c : Config.LINE.Color;
+        _dom.setAttribute("stroke-width", _result.h);
+        _dom.setAttribute("stroke", _color);
+        _dom.setAttribute('fill', 'none');
+        var d = "M ";
+        for (var i = 0; i < points.length; i++) {
+            var px = x + Tools.getVolume(points[i].x, ctrl.parentNode.W);
+            var py = y + Tools.getVolume(points[i].y, ctrl.parentNode.H);
+            var _str= px + " " + py;
+            d += (i < points.length - 1) ? (_str + " L") : _str;
+        }
+        _dom.setAttribute('d', d);
+    }
+    
     SVGWrapper.prototype.changeWH = function (w,h) {
         var _rW = Tools.matchNum(w);
         var _rH = Tools.matchNum(h);
@@ -756,7 +797,6 @@ var iCanvas = function () {
         }
         this.svg.style.width = this.w + "px";
 
-
         if (_rH.unit == "px") {
             this.h = _rH.v;
         }
@@ -764,8 +804,6 @@ var iCanvas = function () {
             this.h = (1 + _rH.v / 100) * this.h;
         }
         this.svg.style.height = this.h + "px";
-
-
     }
 
     return {
@@ -799,6 +837,15 @@ var iCanvas = function () {
             }
             , g: function (wrapper, w, h, l, t, pDom) {
                 return new G(wrapper, w, h, l, t,null,null, pDom);
+            }
+            , circle: function (wrapper, w, h, l, t, c, borderC,borderW, pDom) {
+                //the border param should contains color and border width
+                var _newCircle= new CIRCLE(wrapper, w, h, l, t, c, null, pDom);
+                _newCircle.applyBorder(borderC, borderW);
+                return _newCircle;
+            }
+            , path: function (wrapper, w, h, l, t, c, pDom) {
+                return new PATH(wrapper, w, h, l, t, c, null, pDom);
             }
         }
         , newExp: function (value) {
