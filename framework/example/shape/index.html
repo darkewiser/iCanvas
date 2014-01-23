@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="../../lib/sea-debug.js"></script>
+    <style>
+        div {
+            width: 100px;
+            height: 100px;
+        }
+
+        .circle, .rect {
+            position: absolute;
+            top: 50px;
+            left: 500px;
+            border-radius: 50px /50px;
+            background-image: -webkit-linear-gradient(to top,red,black);
+            background-image: -moz-linear-gradient(to top,red,black);
+            background-image: -o-linear-gradient(to top,red,black);
+            background-image: linear-gradient(to top,red,black);
+        }
+
+        .rect {
+            top: 500px;
+            left: 0;
+            border-radius: 0px /0px;
+           background-image: -webkit-linear-gradient(to top,green,yellow);
+            background-image: -moz-linear-gradient(to top,green,yellow);
+            background-image: -o-linear-gradient(to top,green,yellow);
+            background-image: linear-gradient(to top,green,yellow);
+        }
+
+        input {
+            position: fixed;
+            width: 80px;
+            height: 40px;
+            font-size: 20px;
+            text-align: center;
+            border: none;
+            user-select: none;
+            outline-color: green;
+            background-image: -webkit-linear-gradient(to top,green,white);
+            background-image: -moz-linear-gradient(to top,green,black);
+            background-image: -o-linear-gradient(to top,green,black);
+            background-image: linear-gradient(to top,green,white);
+        }
+
+        .start {
+            left: 0px;
+        }
+
+        .stop {
+            left: 100px;
+        }
+
+        .loop {
+            left: 200px;
+        }
+
+        .noloop {
+            left: 300px;
+        }
+        .addSpeed{
+            left:400px;
+        }
+    </style>
+</head>
+<body>
+    <div id="circle" class="circle">
+    </div>
+    <div id="rect" class="rect">
+        Hello
+    </div>
+
+    <input type="button" id="start" class="start" value="开始" />
+    <input type="button" id="stop" class="stop" value="暂停" />
+    <input type="button" id="loop" class="loop" value="循环" />
+    <input type="button" id="noloop" class="noloop" value="noloop" />
+    <input type="button" id="addSpeed" class="addSpeed" value="加速" />
+    <script>
+
+        seajs.use("./js/shape");
+    </script>
+</body>
+</html>
