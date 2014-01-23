@@ -1,0 +1,74 @@
+﻿div {
+    width: 100px;
+    height: 100px;
+}
+
+.circle {
+    position: absolute;
+    top: 50px;
+    left: 500px;
+    border-radius: 50px /50px;
+}
+
+.red2black {
+    background-image: -webkit-linear-gradient(to top,red,black);
+    background-image: -moz-linear-gradient(to top,red,black);
+    background-image: -o-linear-gradient(to top,red,black);
+    background-image: linear-gradient(to top,red,black);
+}
+
+.green2yellow {
+    background-image: -webkit-linear-gradient(to top,green,yellow);
+    background-image: -moz-linear-gradient(to top,green,yellow);
+    background-image: -o-linear-gradient(to top,green,yellow);
+    background-image: linear-gradient(to top,green,yellow);
+}
+
+.green2white {
+    background-image: -webkit-linear-gradient(to top,green,white);
+    background-image: -moz-linear-gradient(to top,green,white);
+    background-image: -o-linear-gradient(to top,green,white);
+    background-image: linear-gradient(to top,green,white);
+}
+
+
+.rect {
+    position: absolute;
+    top: 300px;
+    left: 0;
+    -webkit-transform-origin: top;
+    -moz-transform-origin: top;
+    -o-transform-origin: top;
+    transform-origin: top;
+}
+
+input {
+    position: fixed;
+    width: 80px;
+    height: 40px;
+    font-size: 20px;
+    text-align: center;
+    border: none;
+    user-select: none;
+    outline-color: green;
+}
+
+.start {
+    left: 0px;
+}
+
+.stop {
+    left: 100px;
+}
+
+.loop {
+    left: 200px;
+}
+
+.noloop {
+    left: 300px;
+}
+
+.addSpeed {
+    left: 400px;
+}

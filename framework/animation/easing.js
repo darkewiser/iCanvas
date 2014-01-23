@@ -1,4 +1,10 @@
-﻿define(function (require) {
+﻿/*
+ * 缓动函数参考jQuery Easing http://gsgd.co.uk/sandbox/jquery/easing/
+ * 
+ * @Author: Mingli Guo (v-minggu@microsoft.com \ guomilo@gmail.com)
+ *
+*/
+define(function (require) {
     return {
         linear: function (t, b, c, d) {
             return b + t / d * c;

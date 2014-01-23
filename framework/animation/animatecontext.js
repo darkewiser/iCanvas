@@ -13,6 +13,7 @@
     ACPrototype.init = function () {
         this.timer = new Timer();
         this.animates = [];
+        this.runAnimates = [];
     }
     ACPrototype.getTimer = function () {
         return this.timer;
@@ -22,7 +23,9 @@
     }
     ACPrototype.update = function () {
         for (var i = 0, ci; ci = this.animates[i]; i++) {
-            this.animates[i].update();
+            if (!ci.isInChained()) {
+                ci.update();
+            }
         }
     }
     ACPrototype.stopTimer = function () {
@@ -38,12 +41,20 @@
             this.animates[i].pause();
         }
     }
+    
     ACPrototype.createAnimate = function (segments, onstep, oncompleted) {
-        var animate = new Animate();
-        animate.createChinedAnimate(segments, { onstep: onstep, oncompleted: oncompleted });
-        this.animates.push(animate);
+        var animate = new Animate(),id;
+        
+        if (tools.isArray(segments) && segments.length > 0) {
+
+            id = this.animates.length;
+            animate.create(segments, { onstep: onstep, oncompleted: oncompleted });
+            animate.id = id;           
+            this.animates.push(animate);
+        }      
         return animate;
     }
+
     ACPrototype.restart = function () {
         for (var i = 0, ci; ci = this.animates[i]; i++) {
             this.animates[i].restart();

@@ -25,6 +25,7 @@
                     for (var k in arguments) {
                         console.log(arguments[k]);
                     }
+                    console.log("")
                 }
                 else {
                     for (var k in arguments) {
