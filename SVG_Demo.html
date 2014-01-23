@@ -20,8 +20,8 @@
             var _floatLayer = iCanvas.ctrls.rect(wrapper, 30, "100+1px", 0, 0, "white");
             var _btnLeft = iCanvas.ctrls.rect(wrapper, 30, 100, 0, 0, "transparent");
             var _btnRight = iCanvas.ctrls.rect(wrapper, 30, 100, 0, 0, "transparent");  
-            var _qTxt = iCanvas.ctrls.txt(wrapper, 0, 0, 50, 50, "green", "Quarterly");
-            var _yTxt = iCanvas.ctrls.txt(wrapper, 0, 0, 50, 50, "green", "Year To Date");
+            var _qTxt = iCanvas.ctrls.txt(wrapper, 50, 50, "Quarterly");
+            var _yTxt = iCanvas.ctrls.txt(wrapper, 50, 50, "Year To Date");
             
             var _axisBack = iCanvas.ctrls.rect(wrapper, 100, 84, 0, 0, "white");
             var _axis = new axis(wrapper, 100, 90, 0, 10,"yellow");
@@ -41,17 +41,23 @@
             _bars.applySingleValue("Q313", 5);
             _bars.applySingleValue("Q413", 6);
 
-            var _line = new line(wrapper, 100, 100, 0, 0, "#ffd800");
+            
+            var _line = new PathLine(wrapper, 100, 100, 0, 0, "#ffd800");
             _line.applyAxis(_axis);
             _line.applySingleValue("Q113", 17);
             _line.applySingleValue("Q213", 19);
             _line.applySingleValue("Q313", 20);
             _line.applySingleValue("Q413", 22);
 
+            var _pushPin = new PushPin(wrapper, 10, 80, 90.4, 10, "transparent");
+            _pushPin.applyBorder("#7e7e7e", 1.1);
+
             //set basic properties
             _floatLayer.setPosition("absolute");
             _btnRight.setFloat("left");
             _yTxt.applyFontColor("white");
+
+            _header.appendChild(_pushPin);
             
             //build ctrl hierachies
             _back.appendChild(_header);
@@ -88,13 +94,13 @@
     <title></title>
 </head>
 <body>
-     <div>
-        <svg width="400px" height="320px" version="1.1" id="container">
-            
-        </svg>
-    </div>
-    <input type="button" value="Zoom In" id="zin"/>
+      <input type="button" value="Zoom In" id="zin"/>
     <input type="button" value="Zoom Out" id="zout"/>
     <input type="text" id="exp"/>
+     <div>
+        <svg width="420px" height="336px" version="1.1" id="container">
+            
+        </svg>
+    </div>  
 </body>
 </html>

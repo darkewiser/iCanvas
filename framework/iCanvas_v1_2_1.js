@@ -275,7 +275,7 @@ var iCanvas = function () {
 
     exp.prototype.merge = function (value, operator) {
         var _tempV = (value instanceof exp) ? value : Tools.matchNum(value);
-        if ((this.unit == _tempV.unit || (_tempV.unit == "num" && (operator == "*" || operator == "/"))) && _tempV.unit != "text") {
+        if ((this.unit == _tempV.unit || (_tempV.unit == "num" && (operator == "*" || operator == "/"))) && this.unit != "text") {
             this.v = eval(this.v + operator + _tempV.v);
             switch (this.unit) {
                 case "px":
@@ -312,6 +312,12 @@ var iCanvas = function () {
     }
     exp.prototype.MulNum = function (value) {
         return this.MUL("{" + value + "}");
+    }
+    exp.prototype.AddNum = function (value) {
+        return this.ADD("{" + value + "}");
+    }
+    exp.prototype.SubNum = function (value) {
+        return this.SUB("{" + value + "}");
     }
 
 
@@ -418,7 +424,6 @@ var iCanvas = function () {
         this._renderHandler = new evtWrapper(this);
         this.childNodes = [];
         this.renderReady = true;
-
         //Bind events
         this.Handlers = new evtCollection(this);
     }
@@ -428,11 +433,32 @@ var iCanvas = function () {
     }
     //render ctrl
     ctrl.prototype.render = function (x, y) {
-        if (!this.wrapper) { return;}
+        if (!this.wrapper) { return; }
+        if (this.onbeforeRender) {
+            this.onbeforeRender.notify(this);
+        }
         this._renderHandler.notify(x, y);
         this.X = x;
         this.Y = y;
+        if (this.onafterRender) {
+            this.onafterRender.notify(this);
+        }
     }
+    //before render
+    ctrl.prototype.beforeRender = function (func) {
+        if (!this.onbeforeRender) {
+            this.onbeforeRender = new evtWrapper(this);
+        }
+        this.onbeforeRender.attach(func);
+    }
+    //after render
+    ctrl.prototype.afterRender = function (func) {
+        if (!this.onafterRender) {
+            this.onafterRender = new evtWrapper(this);
+        }
+        this.onafterRender.attach(func);
+    }
+    //apply w,h,l,t
     ctrl.prototype.applyWH = function (w, h) {
         this.w = w;
         this.h = h;
@@ -500,6 +526,8 @@ var iCanvas = function () {
         this.H = _h;
         this.L = _l;
         this.T = _t;
+        this.AL = _l;
+        this.AT = _t;
         return {
             w: _w
             , h: _h
@@ -518,7 +546,7 @@ var iCanvas = function () {
             //abosulute elements, start from the every beginning of the parent node
             //and current node will not impact the layout
             if (ci.position == CONS.POSITION.ABSOLUTE) {
-                ci.renderAll(_pointer.sx+this.L, _pointer.sy+this.T);
+                ci.renderAll(_pointer.sx+this.AL, _pointer.sy+this.AT);
                 continue;
             }
             //otherwise, render based on element positions
@@ -539,12 +567,32 @@ var iCanvas = function () {
             //1. no float element
             //2. insufficient width
             _pointer.nextLine();
-            _pointer.move(this.L, i==0?this.T:0);
+            _pointer.move(this.AL, i==0?this.AT:0);
             ci.renderAll(_pointer.cx, _pointer.cy);
             _pointer.mx(ci);
            
         }
     }
+    //apply translate & rotate
+    ctrl.prototype.applyRotate = function (angle, x, y) {
+        if (!this.transform) {
+            this.transform = {};
+        }
+        this.transform["rotate"] = {A:"{" + angle + "}", X:x, Y:y};
+    }
+
+    ctrl.prototype.applyTranslate = function (x, y) {
+        if (!this.transform) {
+            this.transform = {};
+        }
+        this.transform["translate"] = { X: x, Y: y };
+    }
+    //border configuration
+    ctrl.prototype.applyBorder = function (color, width) {
+        this.borderC = color;
+        this.borderW = width;
+    }
+
 
     //extend the base ctrl
     function NewCtrl(func) {
@@ -633,7 +681,7 @@ var iCanvas = function () {
         this.type = "g";
         this.onRender(
            function (x, y) {
-               this.wrapper.g(this, "ctrl_g", pDom);
+               this.wrapper.g(this, "ctrl_g",x,y, pDom);
            }
        );
     });
@@ -647,10 +695,6 @@ var iCanvas = function () {
        );
     });
 
-    CIRCLE.prototype.applyBorder = function (color,width) {
-        this.borderC = color;
-        this.borderW = width;
-    }
 
     var PATH = NewCtrl(function (pDom) {
         this.type = "path";
@@ -666,11 +710,29 @@ var iCanvas = function () {
         this.points.push({ x: x, y: y });
     }
 
+    var POLYGON = NewCtrl(function (pDom) {
+        this.type = "polygon";
+        this.points = [];
+        this.onRender(
+           function (x, y) {
+               this.wrapper.path(this, "ctrl_polygon", x, y, this.points, pDom);
+           }
+       );
+    });
+
+    POLYGON.prototype.getPoints = function (x, y) {
+        this.points.push({ x: x, y: y });
+    }
+    
     function GetOrCreateDom(ctrl, id,key,parent){
         var _dom = ctrl[id];
         if (!_dom) {
             _dom = document.createElementNS('http://www.w3.org/2000/svg', key);
             parent.appendChild(_dom);
+            if (parent != ctrl.wrapper.svg) {
+                ctrl["embeded"] = true;
+            }
+
             ctrl[id] = _dom;
             for(var i in ctrl.Handlers){
                 //if the event can be recognized by the dom and it should be initialed with "on"
@@ -687,6 +749,37 @@ var iCanvas = function () {
         return _dom;
     }
 
+    function SetTransform(ctrl, dom, x, y) {
+        if (ctrl.transform && ctrl.transform["rotate"]) {
+            var _rotate = ctrl.transform["rotate"];
+            var _resultStr = ["rotate("];
+            for (var i in _rotate) {
+                var _property = _rotate[i];
+                var _value;
+                switch (i) {
+                    case "A":
+                        _value = Tools.getVolume("{" + _property + "}");
+                        break
+                    case "X":
+                        _value = x + ctrl.L + Tools.getVolume(_property, ctrl.W);
+                        break
+                    case "Y":
+                        _value = y + ctrl.T + Tools.getVolume(_property, ctrl.H);
+                        break
+                    default:
+                        _value = "";
+                        break
+                }
+                _resultStr.push(_value);
+            }
+            _resultStr.push(")");
+            dom.setAttribute("transform", _resultStr.join(" "));
+        }
+    }
+
+    function SetCtrlProperties(ctrl, dom, x, y) {
+        
+    }
 
     var SVGWrapper = function (id) {
         var _svg = document.getElementById(id);
@@ -708,11 +801,19 @@ var iCanvas = function () {
     SVGWrapper.prototype.rect = function (ctrl, id, x, y,pDom) {
         var _dom = GetOrCreateDom(ctrl, id, "rect", pDom? pDom.obj[pDom.ctrl]:this.svg);
         var _result = ctrl.caculateSelf();
+        var _borderWidth = ctrl.borderW != undefined ? ctrl.borderW : 0;
+        var _borderColor = _borderWidth == 0 ? undefined : (ctrl.borderC ? ctrl.borderC : Config.CIRCLE.BorderColor);
         _dom.setAttribute("height", _result.h);
         _dom.setAttribute("width", _result.w);
+        var _flag=SetTransform(ctrl, _dom, x, y);
         _dom.setAttribute("x", x + _result.l);
         _dom.setAttribute("y", y + _result.t);
         _dom.setAttribute("fill", ctrl.c);
+        if (_borderColor !== undefined) {
+            _dom.setAttribute("stroke", _borderColor);
+        }
+        _dom.setAttribute("stroke-width", _borderWidth);
+        SetCtrlProperties(ctrl, _dom, x, y);
     }
     SVGWrapper.prototype.text = function (ctrl, id, x, y,pDom) {
         var _dom = GetOrCreateDom(ctrl, id, "text", pDom ? pDom.obj[pDom.ctrl] : this.svg);
@@ -723,6 +824,7 @@ var iCanvas = function () {
         var _fontColor = ctrl.fontColor ? ctrl.fontColor : Config.TXT.FontColor;
         var _bold = ctrl.bold ? ctrl.bold : Config.TXT.DefaultFontWeight;
         var _dy = ctrl.disY ? ctrl.disY : (parseInt(_fontSize) / 2 - 2);
+        SetTransform(ctrl, _dom, x, y);
         _dom.setAttribute("x", x + _result.l);
         _dom.setAttribute("y", y + _result.t);
         _dom.setAttribute("font-size", _fontSize);
@@ -731,6 +833,7 @@ var iCanvas = function () {
         _dom.setAttribute("text-anchor", _align);
         _dom.setAttribute("dy", _dy);
         _dom.setAttribute("fill", _fontColor);
+        SetCtrlProperties(ctrl, _dom, x, y);
     }
     SVGWrapper.prototype.line = function (ctrl, id, x, y, delta, pDom) {
         //using a delta angle to describe the line
@@ -739,16 +842,20 @@ var iCanvas = function () {
         var _color = ctrl.c ? ctrl.c : Config.LINE.Color;
         var _dx = _result.w * Math.cos(delta == undefined ? 0 : (delta / 180 * Math.PI));
         var _dy = _result.w * Math.sin(delta == undefined ? 0 : (delta / 180 * Math.PI));
+        SetTransform(ctrl, _dom, x, y);
         _dom.setAttribute("x1", x + _result.l);
         _dom.setAttribute("y1", y + _result.t);
-        _dom.setAttribute("x2", x + _result.l+_dx);
+        _dom.setAttribute("x2", x + _result.l + _dx);
         _dom.setAttribute("y2", y + _result.t + _dy);
         _dom.style.stroke = _color;
-        _dom.style.strokeWidth=_result.h;
+        _dom.style.strokeWidth = _result.h;
+        SetCtrlProperties(ctrl, _dom, x, y);
     }
-    SVGWrapper.prototype.g = function (ctrl, id, pDom) {
+    SVGWrapper.prototype.g = function (ctrl, id,x,y, pDom) {
         var _dom = GetOrCreateDom(ctrl, id, "g", pDom ? pDom.obj[pDom.ctrl] : this.svg);
         ctrl.caculateSelf();
+        SetTransform(ctrl, _dom, x, y);
+        SetCtrlProperties(ctrl, _dom, x, y);
     }
 
     SVGWrapper.prototype.circle = function (ctrl, id, x, y, pDom) {
@@ -757,8 +864,8 @@ var iCanvas = function () {
         var _color = ctrl.c ? ctrl.c : Config.CIRCLE.Color;
         var _borderWidth = ctrl.borderW != undefined ? ctrl.borderW : 0;
         var _borderColor = _borderWidth == 0 ? undefined : (ctrl.borderC ? ctrl.borderC : Config.CIRCLE.BorderColor);
-        
         _dom.setAttribute("r", Math.max(_result.w, _result.h));
+        SetTransform(ctrl, _dom, x, y);
         _dom.setAttribute("cx", x + _result.l);
         _dom.setAttribute("cy", y + _result.t);
         _dom.setAttribute("fill", _color);
@@ -766,6 +873,7 @@ var iCanvas = function () {
             _dom.setAttribute("stroke", _borderColor);
         }
         _dom.setAttribute("stroke-width", _borderWidth);
+        SetCtrlProperties(ctrl, _dom, x, y);
     }
 
     SVGWrapper.prototype.path = function (ctrl, id, x, y, points, pDom) {
@@ -776,6 +884,7 @@ var iCanvas = function () {
         _dom.setAttribute("stroke", _color);
         _dom.setAttribute('fill', 'none');
         var d = "M ";
+        SetTransform(ctrl, _dom, x, y);
         for (var i = 0; i < points.length; i++) {
             var px = x + Tools.getVolume(points[i].x, ctrl.parentNode.W);
             var py = y + Tools.getVolume(points[i].y, ctrl.parentNode.H);
@@ -783,6 +892,26 @@ var iCanvas = function () {
             d += (i < points.length - 1) ? (_str + " L") : _str;
         }
         _dom.setAttribute('d', d);
+        SetCtrlProperties(ctrl, _dom, x, y);
+    }
+
+    SVGWrapper.prototype.polygon = function (ctrl, id, x, y, points, pDom) {
+        var _dom = GetOrCreateDom(ctrl, id, "polygon", pDom ? pDom.obj[pDom.ctrl] : this.svg);
+        var _result = ctrl.caculateSelf();
+        var _color = ctrl.c ? ctrl.c : Config.LINE.Color;
+        _dom.setAttribute("stroke-width", _result.h);
+        _dom.setAttribute("stroke", _color);
+        _dom.setAttribute('fill', 'none');
+        var d = [];
+        SetTransform(ctrl, _dom, x, y);
+        for (var i = 0; i < points.length; i++) {
+            var px = x + Tools.getVolume(points[i].x, ctrl.parentNode.W);
+            var py = y + Tools.getVolume(points[i].y, ctrl.parentNode.H);
+            var _str = px + "," + py;
+            d.push(_str);
+        }
+        _dom.setAttribute('points', d.join(" "));
+        SetCtrlProperties(ctrl, _dom, x, y);
     }
     
     SVGWrapper.prototype.changeWH = function (w,h) {
@@ -795,7 +924,7 @@ var iCanvas = function () {
         else {
             this.w = (1 + _rW.v / 100) * this.w;
         }
-        this.svg.style.width = this.w + "px";
+        this.svg.style.width = Math.round(this.w) + "px";
 
         if (_rH.unit == "px") {
             this.h = _rH.v;
@@ -803,7 +932,7 @@ var iCanvas = function () {
         else {
             this.h = (1 + _rH.v / 100) * this.h;
         }
-        this.svg.style.height = this.h + "px";
+        this.svg.style.height = Math.round(this.h) + "px";
     }
 
     return {
@@ -824,11 +953,11 @@ var iCanvas = function () {
             , testRect: function (wrapper, w, h, l, t, c, pDom) {
                 return new TESTRECT(wrapper, w, h, l, t, c, null, pDom);
             }
-            , txt: function (wrapper, w, h, l, t, c, txt, pDom) {
-                return new TXT(wrapper, w, h, l, t, c, txt, pDom);
+            , txt: function (wrapper, l, t, txt, pDom) {
+                return new TXT(wrapper, 0, 0, l, t, null, txt, pDom);
             }
-            , line: function (wrapper, w, h, l, t, c, delta, txt, pDom) {
-                var _temp = new LINE(wrapper, w, h, l, t, c, txt, pDom);
+            , line: function (wrapper, w, h, l, t, c, delta, pDom) {
+                var _temp = new LINE(wrapper, w, h, l, t, c, pDom);
                 _temp.setDelta(delta);
                 return _temp
             }

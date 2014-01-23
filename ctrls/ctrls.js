@@ -46,7 +46,7 @@ var axis = iCanvas.createNewCtrl(function () {
                     //line
                     var _line = iCanvas.ctrls.line(this.wrapper, 100, this.lineWidth, 0, ci, this.lineColor);
                     //vertical lab
-                    var _txt = iCanvas.ctrls.txt(this.wrapper, 0, 0, 0, 0, "transparent", this.labPrefix + _labS[i]);
+                    var _txt = iCanvas.ctrls.txt(this.wrapper, 0, 0, this.labPrefix + _labS[i]);
                     //config txt properties
                     _txt.attachFontHandler(setFontSize);
                     _txt.applyAlign(_txtCons.ALIGN.LEFT);
@@ -60,7 +60,7 @@ var axis = iCanvas.createNewCtrl(function () {
                     var _s = ci.s;
                     var _e = ci.e;
                     var _mp = ci.mp;
-                    var _xTxt = iCanvas.ctrls.txt(this.wrapper, 0, 0, _mp.c, 100, "red", this.XLabs[i]);
+                    var _xTxt = iCanvas.ctrls.txt(this.wrapper, _mp.c, 100, this.XLabs[i]);
                     _xTxt.setPosition(_Cons.POSITION.ABSOLUTE);
                     _xTxt.attachFontHandler(function () {
                         setFontSize.apply(this);
@@ -93,7 +93,6 @@ axis.prototype.setLineCount = function (value) {
         throw "line count is invalid";
     }
     this.lineCount = value;
-    //this.setLineSpace(index == undefined ? 0 : index);
 }
 axis.prototype.setLineSpace = function (index) {
     if (this.lineCount == undefined) { throw "there is no line assigned" }
@@ -170,7 +169,7 @@ axis.prototype.getUnit = function (index) {
 axis.prototype.getTopByValue = function (value) {
     var _u = this.UnitExps[this.selectdRange];
     var _max = this.Range[this.selectdRange].max;
-    return iCanvas.newExp("{" + (_max - value) + "}").MUL(_u).SUB(this.lineWidth).c;
+    return iCanvas.newExp("{" + (_max - value) + "}").MUL(_u).c;
 
 }
 axis.prototype.lineWidth = "1px";
@@ -199,9 +198,9 @@ var bars = iCanvas.createNewCtrl(function () {
             var _exp = iCanvas.newExp;
             for (var i in this.items) {
                 var _single = this.items[i];
-                var _h = _exp("{" + _single.l + "}").MUL(_u).c;
                 var _dx = _exp(this.axis.solts[_seed].mp).SUB(_exp(this.singleW).DivNum(2)).c;
                 var _dy = this.axis.getTopByValue(_single.s + _single.l);
+                var _h = _exp("{" + _single.l + "}").MUL(_u).c;
                 var _singleBar = iCanvas.ctrls.rect(this.wrapper, this.singleW, _h, _dx, _dy, this.backC, { obj: this.GROUP, ctrl: "ctrl_g" });
                 //deal with events
                 _singleBar.Val = _single.s + _single.l;
@@ -253,16 +252,16 @@ bars.prototype.applyColors = function (backC, hoverC) {
 }
 
 
-var line = iCanvas.createNewCtrl(function () {
+var PathLine = iCanvas.createNewCtrl(function () {
     this.type = "line";
     var _Cons = this.CONS;
     this.setPosition(_Cons.POSITION.ABSOLUTE);
-    var _rendered = false;
     this.lineWidth = 3;
     this.radius = 2;
+    this.nodes = [];
     this.onRender(function (x, y) {
         this.caculateSelf();
-        if (!_rendered) {
+        if (this.nodes.length==0) {
             var _seed = 0;
             var _path = iCanvas.ctrls.path(this.wrapper, 100, this.lineWidth, 0, 0, this.c);
             _path.setPosition(_Cons.POSITION.ABSOLUTE);
@@ -274,6 +273,7 @@ var line = iCanvas.createNewCtrl(function () {
                 this.appendChild(_path);
                 var _node = iCanvas.ctrls.circle(this.wrapper, this.radius, this.lineWidth, _dx, _dy, this.c);
                 _node.setPosition(_Cons.POSITION.ABSOLUTE);
+                this.nodes.push(_node);
                 this.appendChild(_node);
                 _seed++;
             }
@@ -282,7 +282,7 @@ var line = iCanvas.createNewCtrl(function () {
     });
 });
 
-line.prototype.applyAxis = function (axis, cordIndex) {
+PathLine.prototype.applyAxis = function (axis, cordIndex) {
     this.axis = axis;
     axis.attachCtrl(this);
     //in case of multiple cordinations in the axis, the cordIndex is designed to specify a sertain one
@@ -291,14 +291,40 @@ line.prototype.applyAxis = function (axis, cordIndex) {
     this.RangeIndex = _rangeInd;
 }
 
-line.prototype.applySingleValue = function (key, value) {
+PathLine.prototype.applySingleValue = function (key, value) {
     if (!this.items) {
         this.items = {};
     }
     this.items[key] = value;
 }
 
-line.prototype.applyLineAndCircleWidth = function (lw, r) {
+PathLine.prototype.applyLineAndCircleWidth = function (lw, r) {
     this.lineWidth = lw;
     this.radius = r;
+}
+
+var PushPin = iCanvas.createNewCtrl(function () {
+    this.type = "Icon";
+    var _Cons = this.CONS;
+    this.GROUP = iCanvas.ctrls.g(this.wrapper, 100, 100, 0, 0);
+    this.appendChild(this.GROUP);
+    var _node = iCanvas.ctrls.circle(this.wrapper, 0, 50, 50, 50, this.c, null, null, { obj: this.GROUP, ctrl: "ctrl_g" });
+   
+    this.GROUP.appendChild(_node);
+
+    this.GROUP.applyRotate(45, 50, 50);
+    this.onRender(function (x, y) {
+        this.caculateSelf();
+        _node.applyBorder(this.borderC, this.borderW);
+        var _rect = iCanvas.ctrls.testRect(this.wrapper, 50, 50, 25, 25, this.borderC, { obj: this.GROUP, ctrl: "ctrl_g" });
+        _rect.setPosition(_Cons.POSITION.ABSOLUTE);
+        this.GROUP.appendChild(_rect);
+        
+    });
+});
+
+
+PushPin.prototype.applyBorder = function (color, width) {
+    this.borderC = color;
+    this.borderW = width;
 }
