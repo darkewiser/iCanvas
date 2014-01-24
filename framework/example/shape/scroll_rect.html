@@ -3,24 +3,34 @@
 <head>
     <title></title>
     <link href="css/shape.css" rel="stylesheet" />
-    <script src="../../lib/sea-debug.js"></script>
-
+    <script src="../../lib/sea.js"></script>
 </head>
 <body>
-    <div id="circle" class="circle red2black">
-    </div>
-
     <div id="rect" class="rect green2yellow">
         Hello
     </div>
-
     <input type="button" id="start" class="start green2white" value="开始" />
     <input type="button" id="stop" class="stop green2white" value="暂停" />
-    <input type="button" id="loop" class="loop green2white" value="循环" />
-    <input type="button" id="noloop" class="noloop green2white" value="noloop" />
-    <input type="button" id="addSpeed" class="addSpeed green2white" value="加速" />
     <script>
-        seajs.use("./js/shape");     
+        seajs.use("./js/scrool_rect.js");
+
+        function test() {
+            this._arrs = [];
+        }
+
+        test.prototype = function () {
+
+            return {
+                add: function () {
+                    this._arrs.push(arguments[0]);
+                }
+            }
+
+        }();
+
+        var t = new test();
+        t.add(function () { asdf });
+
     </script>
 </body>
 </html>

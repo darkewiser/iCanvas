@@ -41,17 +41,23 @@
             this.animates[i].pause();
         }
     }
-    
-    ACPrototype.createAnimate = function (segments, onstep, oncompleted) {
-        var animate = new Animate(),id;
-        
-        if (tools.isArray(segments) && segments.length > 0) {
+    /*
+     * 根据segments中对象的count创建不同的动画，count>1创建的是个链表动画
+     *
+     *
+     *
+    */
+    ACPrototype.createAnimate = function (segments, defauls, loop) {
+        var animate = new Animate(), id, tmpSegments;
+
+        if (tools.isArray(segments) && segments.length > 0) {          
 
             id = this.animates.length;
-            animate.create(segments, { onstep: onstep, oncompleted: oncompleted });
-            animate.id = id;           
+            animate.create(segments, defauls,loop);
+            animate.id = id;
+
             this.animates.push(animate);
-        }      
+        }
         return animate;
     }
 

@@ -16,8 +16,8 @@
         {
             duration: 2000,
             from: { top: 50, left: 500, w: 100, h: 100 },
-            to: { top: 500, left: 500, w: 20, h: 20 }            
-                
+            to: { top: 500, left: 500, w: 20, h: 20 }
+
         },
         {
             duartion: 3000,
@@ -34,12 +34,14 @@
             }
         }
 
-    ], function (d) {
-        circle.style.left = d.left + "px";
-        circle.style.top = d.top + "px";
-        circle.style.width = d.w + "px";
-        circle.style.height = d.h + "px";
-        circle.style.borderRadius = d.w / 2 + "px /" + d.h / 2 + "px"
+    ], {
+        onstep: function (d) {
+            circle.style.left = d.left + "px";
+            circle.style.top = d.top + "px";
+            circle.style.width = d.w + "px";
+            circle.style.height = d.h + "px";
+            circle.style.borderRadius = d.w / 2 + "px /" + d.h / 2 + "px"
+        }
     });
 
     var allAnimates = animate.getAnimates();
@@ -51,35 +53,37 @@
         from: { top: 300, left: 0, deg: 0 },
         to: { top: 300, left: 1000, deg: 360 },
         easing: 'easeInOutElastic',
-        
-
     }
 
 
-    ], function (d) {
-        rect.style.left = d.left + "px";
-        rect.style.top = d.top + "px";
-        rect.style.webkitTransform = "rotate(" + d.deg + "deg)"
+    ], {
+        onstep: function (d) {
+            rect.style.left = d.left + "px";
+            rect.style.top = d.top + "px";
+            rect.style.webkitTransform = "rotate(" + d.deg + "deg)"
 
 
+        }
     });
 
     var animate2 = animateContext.createAnimate([{
         duration: 2000,
-        delay:500,
+        delay: 500,
         from: { top: 10, left: 100, deg: 0 },
         to: { top: 500, left: 100, deg: 360 },
         easing: 'easeInOutElastic',
-       
+
     }
 
 
-    ], function (d) {
-        stop.style.left = d.left + "px";
-        stop.style.top = d.top + "px";
-        stop.style.webkitTransform = "rotate(" + d.deg + "deg)"
+    ], {
+        onstep: function (d) {
+            stop.style.left = d.left + "px";
+            stop.style.top = d.top + "px";
+            stop.style.webkitTransform = "rotate(" + d.deg + "deg)"
 
 
+        }
     });
 
     var animate3 = animateContext.createAnimate([{
@@ -90,10 +94,12 @@
         easing: 'easeInOutElastic',
 
     }
-    ], function (d) {
-        loop.style.left = d.left + "px";
-        loop.style.top = d.top + "px";
-        loop.style.webkitTransform = "rotate(" + d.deg + "deg)"
+    ], {
+        onstep: function (d) {
+            loop.style.left = d.left + "px";
+            loop.style.top = d.top + "px";
+            loop.style.webkitTransform = "rotate(" + d.deg + "deg)"
+        }
     });
 
     var animate4 = animateContext.createAnimate([{
@@ -104,10 +110,12 @@
         easing: 'easeInOutElastic',
 
     }
-    ], function (d) {
-        noloop.style.left = d.left + "px";
-        noloop.style.top = d.top + "px";
-        noloop.style.webkitTransform = "rotate(" + d.deg + "deg)"
+    ], {
+        onstep: function (d) {
+            noloop.style.left = d.left + "px";
+            noloop.style.top = d.top + "px";
+            noloop.style.webkitTransform = "rotate(" + d.deg + "deg)"
+        }
     });
     var animate5 = animateContext.createAnimate([{
         duration: 2000,
@@ -117,19 +125,21 @@
         easing: 'easeInOutElastic',
 
     }
-    ], function (d) {
-        speed.style.left = d.left + "px";
-        speed.style.top = d.top + "px";
-        speed.style.webkitTransform = "rotate(" + d.deg + "deg)"
+    ], {
+        onstep: function (d) {
+            speed.style.left = d.left + "px";
+            speed.style.top = d.top + "px";
+            speed.style.webkitTransform = "rotate(" + d.deg + "deg)"
+        }
     });
 
-    animate.completedRunAnimate(animate1);   
+    animate.completedCallback(animate1);
 
-    animate1.completedRunAnimate(animate2);
-    animate2.completedRunAnimate(animate3);
-    animate3.completedRunAnimate(animate4);
-    animate4.completedRunAnimate(animate5);
-    
+    animate1.completedCallback(animate2);
+    animate2.completedCallback(animate3);
+    animate3.completedCallback(animate4);
+    animate4.completedCallback(animate5);
+
     /*控制*/
 
     speed.onclick = function () {
@@ -158,5 +168,5 @@
         animate.setRepeat(false);
     }
     animateContext.startTimer();
-    
+
 });

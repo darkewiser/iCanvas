@@ -198,15 +198,43 @@ define(function (require) {
             _duration = duration;
             return this;
         }
-        /*
-         * 动画是否循环执行，与repeat互斥。
-        */
-        this.loop = function (flag) {
-            _isLoop = tools.isBool(flag) ? flag : !!flag;
 
-            _repeatCount = _isLoop ? 1 : _repeatCount;
+        /*
+        * 动画是否循环执行，与repeat互斥。
+        */
+        this.loop = function (count) {
+
+            /*循环次数*/
+            _loopCount = tools.isNumber(count) && count > 0 ? count : 0;
+            _loopCount_Backup = _loopCount;
+
+            /*是否不限次数的循环*/
+            _isLoop = tools.isNumber(count) && count <0 ? true : false;
+
+            /*动画循环，动画的重复失效*/
+            _repeatCount = _loopCount > 0 ? 0 : _repeatCount;
+            _repeatForover = _isLoop || _loopCount > 0 ? false : _repeatForover;
             return this;
         }
+        /*
+       * 动画是否重复执行，与loop互斥。
+       */
+        this.repeat = function (count) {
+
+            /*重复次数*/
+            _repeatCount = tools.isNumber(count) && count > 0 ? count : 0;
+            _repeatCount_Backup = _repeatCount;
+
+            /*是否不限次数的重复*/
+            _repeatForover = tools.isNumber(count) && count < 0 ? true : false;
+
+            /*动画重复，动画的循环失效*/
+            _loopCount = _repeatCount > 0 ? 0 : _loopCount;
+            _isLoop = _repeatForover || _repeatCount > 0 ? false : _isLoop;            
+            return this;
+        }
+
+
         /*
          * 重新开始链表动画
         */
@@ -218,19 +246,13 @@ define(function (require) {
 
             });
         }
+        /*
+         * 返回动画的链表动画
+        */
         this.getAllChainedAnimate = function () {
             return _chainedAnimate;
         }
-        this.repeat = function (count) {
-            /*重复次数*/
-            _repeatCount = tools.isNumber(count) && count > 0 ? count : 1;
-            _repeatCount_Backup = _repeatCount;
-            /*是否不限次数的重复*/
-            _repeatForover = count <= 0 ? true : false;
-            /*动画重复，动画的循环失效*/
-            _isLoop = _repeatForover || _repeatCount > 1 ? false : _isLoop;
-            return this;
-        }
+
         /*指定属性的初始值*/
         this.from = function (sPropreties) {
             _startPropreties = tools.clone(sPropreties);
@@ -389,7 +411,7 @@ define(function (require) {
                                   "       3: Loop Reference"
                                   , "Path:core.js"
                                   , "function:chainedAnimate");
-               
+
             }
             return this;
         }
@@ -471,14 +493,17 @@ define(function (require) {
 
             if (elapsed == _duration) {
 
-                _repeatCount--;
-
                 if (_repeatCount > 0 || _repeatForover) {
+
+                    _repeatCount--;
+
                     /*重复执行*/
                     _startTime = 0;
+
                 }
-                else if (_isLoop) {
+                else if (_loopCount > 0 || _isLoop) {
                     /*循环动画*/
+                    _loopCount--;
                     _startTime = 0;
                     var tmp = tools.clone(_startPropreties);
                     _startPropreties = tools.clone(_endPropreties);

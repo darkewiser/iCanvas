@@ -1,7 +1,7 @@
 ﻿/*
  *
  * @author Mingli (v-minggu@microsoft.com \ guomilo@gmail.com)
- *
+ * 
  * createChinedAnimate:     创建动画或链式动画
  * getAnimates:             获取所有的AnimateCore对象，便于对每个动画进行控制。具体参考core.js 
  * active:                  继续暂停的动画
@@ -21,7 +21,7 @@ define(function (require) {
         log = require("../tools/log"),
         Obsever = require("../tools/observer");
 
-    function Animate() {
+    function Animate(segments, defaults, loop) {
 
         /* 存储生成的所有链式AnimateCore对像*/
         this._chainedAnimates = [];
@@ -33,6 +33,19 @@ define(function (require) {
         this.repeat = false;
         /* 唯一识别码*/
         this._guid = tools.newId();
+        /* 动画完成后回调函数数组*/
+        this._completedCallBack = [];
+
+
+        /*TODO：待定*/
+
+        this._loop = loop;
+
+        this.segments = segments;
+
+        this.defaultSegments = defaults;
+
+        return this.create(segments, defaults, loop);
     }
 
 
@@ -47,8 +60,8 @@ define(function (require) {
                 from: {},                //初始变化属性       
                 to: {},                  //目标变化属性 
                 delay: 0,                //动画的延迟执行时间
-                loop: false,             //是否循环执行
-                repeat: 1,               //是否重复执行
+                loop: 0,                 //循环执行次数 0:不循环，小于0：无限循环，大于0：循环指定的次数
+                repeat: 0,               //重复执行次数 0:不重复，小于0：无限重复，大于0：重复指定的次数
                 easing: "",              //缓动函数
                 onstep: null,            //动画变化过程中的更新操作
                 oncompleted: null        //动画完成后的回调
@@ -65,8 +78,8 @@ define(function (require) {
                 from: {},
                 to: {},
                 delay: 0,
-                loop: false,
-                repeat: 1,
+                loop: 0,
+                repeat: 0,
                 easing: "",
                 onstep: null,
                 oncompleted: null
@@ -88,85 +101,98 @@ define(function (require) {
             return aniCore;
         }
 
+        /*
+         *将多维数组转成一维
+        */
+        function toOneRank(array) {
+            var result = [];
+            +function (arrs) {
+                if (tools.isArray(arrs)) {
+                    for (var i = 0; i < arrs.length; i++) {
+                        arguments.callee.call(this, arrs[i]);
+                    }
+                }
+                else if (!tools.isEmptyOrNullObject(arrs)) {
+                    result.push(arrs);
+                }
+            }(array);
+            return result;
+        }
 
-        return {
-            createChainedAnimate1: function (segments, defaults) {
-                var i = 0, ci,
-                    animate,
-                    len;
-                if (tools.isArray(segments)) {
-                    for (; ci = segments[i]; i++) {
-                        len = this._chainedAnimates.length
-                        animate = createAnimate(ci, defaults);
-                        if (len >= 1) {
-                            this._chainedAnimates[len - 1].chainedAnimate(animate);
-                        }
-                        this._chainedAnimates.push(animate);
+        function swapFormAndTo(segments) {
+            var from, to, tmp;
+            for (var i = 0, ci; ci = segments[i]; i++) {
+                tmp = tools.clone(ci.from);
+                ci.from = tools.clone(ci.to);
+                ci.to = tmp;
+            }
+            return segments;
+        }
+
+        /*
+         * 创建链式动画             *
+         * 
+         * @param [{segment},{segment},{segment}] 参见:createAnimate参数说明
+         * @param {defaults} 参见:createAnimate参数说明
+         *
+        */
+        function createChainedAnimate(segments, defaults) {
+            var ci,
+                animate,
+                len;
+
+            (function (_segments, _defaults) {
+                if (tools.isArray(_segments)) {
+                    for (var i = 0; ci = _segments[i]; i++) {
+                        arguments.callee.call(this, ci, _defaults);
                     }
                 }
                 else {
-                    animate = createAnimate(segments, defaults);
+
+                    if (tools.isEmptyOrNullObject(_segments)) return;
+
+                    animate = createAnimate(_segments, _defaults);
+
+                    len = this._chainedAnimates.length
+                    if (len >= 1) {
+                        this._chainedAnimates[len - 1].chainedAnimate(animate);
+                    }
+                    this._chainedAnimates.push(animate);
+
+                }
+
+            }).call(this, segments, defaults);
+
+            return this._chainedAnimates;
+        }
+        /*
+         * 创建动画           
+         * 
+         * @param [{segment}] 参见:createAnimate参数说明
+         * @param {defaults} 参见:createAnimate参数说明
+         *
+        */
+        function createNonChainedAnimate(segments, defaults) {
+            var ci, animate;
+            (function (_segments, _defaults) {
+                if (tools.isArray(_segments)) {
+                    for (var i = 0; ci = _segments[i]; i++) {
+                        arguments.callee.call(this, ci, _defaults);
+                    }
+                }
+                else {
+                    if (tools.isEmptyOrNullObject(_segments)) return;
+                    animate = createAnimate(_segments, _defaults);
                     this._chainedAnimates.push(animate);
                 }
-                return this._chainedAnimates;
-            },
-            /*
-             * 创建链式动画             *
-             * 
-             * @param [{segment},{segment},{segment}] 参见:createAnimate参数说明
-             * @param {defaults} 参见:createAnimate参数说明
-             *
-            */
-            createChainedAnimate: function (segments, defaults) {
-                var ci,
-                    animate,
-                    len;
 
-                (function (_segments, _defaults) {
-                    if (tools.isArray(_segments)) {
-                        for (var i = 0; ci = _segments[i]; i++) {
-                            arguments.callee.call(this, ci, _defaults);
-                        }
-                    }
-                    else {
-                        animate = createAnimate(_segments, _defaults);
-                        len = this._chainedAnimates.length
-                        if (len >= 1) {
-                            this._chainedAnimates[len - 1].chainedAnimate(animate);
-                        }
+            }).call(this, segments, defaults);
 
-                        this._chainedAnimates.push(animate);
-                    }
+            return this._chainedAnimates;
+        }
 
-                }).call(this, segments, defaults);
 
-                return this._chainedAnimates;
-            },
-
-            /*
-            * 创建动画           
-            * 
-            * @param [{segment}] 参见:createAnimate参数说明
-            * @param {defaults} 参见:createAnimate参数说明
-            *
-            */
-            createAnimate: function (segments, defaults) {
-                var ci, animate;
-                (function (_segments, _defaults) {
-                    if (tools.isArray(_segments)) {
-                        for (var i = 0; ci = _segments[i]; i++) {
-                            arguments.callee.call(this, ci, _defaults);
-                        }
-                    }
-                    else {
-                        animate = createAnimate(_segments, _defaults);
-                        this._chainedAnimates.push(animate);
-                    }
-
-                }).call(this, segments, defaults);
-
-                return this._animates;
-            },
+        return {
             /*
              * 创建动画或链式动画   
              * 
@@ -174,22 +200,32 @@ define(function (require) {
              * @param {defaults} 参见:createAnimate参数说明
              *
             */
-            create: function (segments, defaults) {
+            create: function (segments, defaults, loop) {
                 var len;
+                segments = toOneRank(segments);
+
                 if (tools.isArray(segments)) {
                     len = segments.length;
                     if (len > 1) {
-                        return this.createChainedAnimate(segments, defaults);
+                        if (loop) {
+                            var tmpSegments = tools.clone(segments);
+                            segments = segments.concat(swapFormAndTo(tmpSegments.reverse()));
+                            this.setRepeat(true);
+                        }
+                        return createChainedAnimate.call(this, segments, defaults);
                     }
                     else if (len == 1) {
-                        return this.createAnimate(segments, defaults);
+                        if (loop) {
+                            segments[0]["loop"] = -1;
+                        }
+                        return createNonChainedAnimate.call(this, segments, defaults);
                     }
                 }
                 else {
-                    this.createAnimate(segments, defaults);
+                    return createNonChainedAnimate.call(this, segments, defaults);
                 }
+                return this;
             },
-
             getAnimates: function () {
                 return this._chainedAnimates;
             },
@@ -218,10 +254,24 @@ define(function (require) {
                 }
             },
             update: function () {
-                this.getFirstAnimate().update(Date.now());
-                if (this.repeat && this.isAnimateCompleted()) {
-                    this.restart();
+
+                /*
+                 * 为动画添加   
+                */
+                var len = this._completedCallBack.length;
+                for (var i = 0; i < len; i++) {
+                    this.getLastAnimate().oncompleted(this._completedCallBack.shift());
                 }
+
+                this.getFirstAnimate().update(Date.now());
+
+                if (this.isAnimateCompleted()) {
+                    if (this.repeat) {
+                        this.restart();
+                    }
+                }
+
+
             },
             active: function () {
                 var obj = this.getFirstAnimate();
@@ -244,9 +294,9 @@ define(function (require) {
                 return this.inChained;
             },
             /*
-             * 添加动画完成后所要运行的动画（链表动画）
+             * 添加动画链表完成后所要运行的function或动画（链表动画）
             */
-            completedRunAnimate: function () {
+            completedCallback: function () {
                 var aniCore, animate;
 
                 /*
@@ -263,24 +313,32 @@ define(function (require) {
                         return arguments.callee.call(this.parentAnimate, animate);
                     }
                 }
-
                 for (var i = 0; i < arguments.length; i++) {
                     animate = arguments[i];
                     if (animate instanceof Animate && this._guid != animate._guid && !isLoopReference.call(this, animate)) {
                         aniCore = animate.getFirstAnimate();
                         animate.inChained = true;
                         animate.parentAnimate = this;
+
+                        this.getLastAnimate().chainedAnimate(aniCore);
+
+                        this._chainedAnimates = this._chainedAnimates.concat(animate.getAnimates());
+                    }
+                    else if (tools.isFunction(animate)) {
+                        this._completedCallBack.push(animate);
                     }
                     else {
-                        log.write("Error: 1: variable 'animate' is not an instance of 'Animate'",
-                                  "       2: Object's '_guid' proprety is same",
-                                  "       3: Loop Reference"
+                        log.write("Error: 1: variable 'animate' is not an instance of 'Animate'"
+                                  , "      2: Object's '_guid' proprety is same"
+                                  , "      3: Loop Reference"
+                                  , "     4: variable 'animate' is not function"
                                   , "Path:animate.js"
                                   , "function:completedRunAnimate");
                     }
-                    this.getLastAnimate().chainedAnimate(aniCore);
+
                 }
             }
+
 
         }
     }();
