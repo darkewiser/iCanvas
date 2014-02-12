@@ -38,7 +38,7 @@
         circle.style.width = d.w + "px";
         circle.style.height = d.h + "px";
         circle.style.borderRadius = d.w / 2 + "px /" + d.h / 2 + "px"
-    }   
+    }
 
     animate1.start();
     animate1.oncompleted(function () {
@@ -51,15 +51,56 @@
         animate1.start();
     })
 
+
+    var animate4 = new core({
+        duration: 2000,
+        from: { left: -100 },
+        to: { left: 1200 },
+        easing: 'easeInOutElastic'
+    });
+    animate4.onstep(function (d) {
+        start.style.left = d.left + "px";
+    }).start();
+
+    var animate5 = animate4.clone();
+    animate5.delay(100);
+    animate5.onstep(function (d) {
+        stop.style.left = d.left + "px";
+    },true).start();
+
+    var animate6 = animate5.clone();
+    animate6.delay(150);
+    animate6.onstep(function (d) {
+        loop.style.left = d.left + "px";
+    }, true).start();
+
+    var animate7 = animate5.clone();
+    animate7.delay(200);
+    animate7.onstep(function (d) {
+        noloop.style.left = d.left + "px";
+    }, true).start();
+
+    var animate8 = animate5.clone();
+    animate8.delay(250);
+    animate8.onstep(function (d) {
+        speed.style.left = d.left + "px";
+    }, true).start();
+
     function update() {
         animate1.update();
         animate2.update();
         animate3.update();
+        animate4.update();
+        animate5.update();
+        animate6.update();
+        animate7.update();
+        animate8.update();
+        
     }
     tobj.start(update);
 
 
-  
+
 
     /*控制*/
 
@@ -75,7 +116,7 @@
         animate1.active();
         animate2.active();
         animate3.active();
-    }  
-  
+    }
+
 
 });

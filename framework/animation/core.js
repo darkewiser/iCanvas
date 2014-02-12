@@ -247,7 +247,10 @@ define(function (require) {
             return this;
         }
         /*动画运行时的回调函数*/
-        this.onstep = function (func) {
+        this.onstep = function (func, isClear) {
+            if (isClear) {
+                _eventHandler.remove("step");
+            }
             if (tools.isFunction(func)) {
                 _eventHandler.attach("step", func);
             }
@@ -259,7 +262,10 @@ define(function (require) {
             return this;
         }
         /*动画完成时的回调函数*/
-        this.oncompleted = function (func) {
+        this.oncompleted = function (func, isClear) {
+            if (isClear) {
+                _eventHandler.remove("step");
+            }
             if (tools.isFunction(func)) {
                 _eventHandler.attach("completed", func);
             }
@@ -309,6 +315,26 @@ define(function (require) {
                     animate.onstep(steps[i]);
                 }
             }
+            return animate;
+        }
+        /*
+         * 克隆当前动画
+        */
+        this.clone = function () {
+            var animate = new AnimateCore();
+            animate.setDuration(_duration)
+                   .from(_startPropreties)
+                   .to(_endPropreties)
+                   .delay(_delayTime)
+                   .easing(_easingFunction);
+
+            var steps = _eventHandler.getHandlerByKey("step");
+            if (!tools.isUndefined(steps) && steps.length > 0) {
+                for (var i = 0; i < steps.length; i++) {
+                    animate.onstep(steps[i]);
+                }
+            }
+
             return animate;
         }
         /*

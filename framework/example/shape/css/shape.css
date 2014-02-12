@@ -52,23 +52,80 @@ input {
     user-select: none;
     outline-color: green;
 }
+.left_100 {
+    left: -100px;
+}
 
-.start {
+.left0 {
     left: 0px;
 }
 
-.stop {
+.left50 {
+    left: 50px;
+}
+
+.left100 {
     left: 100px;
 }
 
-.loop {
+.left150 {
+    left: 150px;
+}
+
+.left200 {
     left: 200px;
 }
 
-.noloop {
+.left250 {
+    left: 250px;
+}
+
+.left300 {
     left: 300px;
 }
 
-.addSpeed {
-    left: 400px;
+.left350 {
+    left: 300px;
+}
+
+.left400 {
+    left: 300px;
+}
+
+
+
+.top0 {
+    top: 0px;
+}
+
+.top50 {
+    top: 50px;
+}
+
+.top100 {
+    top: 100px;
+}
+
+.top150 {
+    top: 150px;
+}
+
+.top200 {
+    top: 200px;
+}
+
+.top250 {
+    top: 250px;
+}
+
+.top300 {
+    top: 300px;
+}
+
+.top350 {
+    top: 300px;
+}
+
+.top400 {
+    top: 300px;
 }
