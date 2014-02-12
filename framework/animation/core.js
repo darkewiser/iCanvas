@@ -19,13 +19,9 @@
  * onstep                    动画运行中回调函数
  * oncompleted               动画完成的回调函数
  * onstart                   动画开始时回调函数
- * chainedAnimate            添加动画链
  * update                    更新动画
  * easing                    添加缓动函数
- * loop                      动画是否循环，与repeat互斥
- * repeat                    动画是重复，参数小于等于0时，重复无限次，与loop互斥
- * restartChainedAnimate     重新启动链表动画。
- * isChainedAnimateCompleted 链表动画是否完成。
+ * isCompleted               动画是否完成。
  *
  *
  * example:
@@ -119,7 +115,7 @@ define(function (require) {
             _eventHandler = new observer(this),
 
         /*缓动函数*/
-            _easingFunction = easingObj.linear,
+            _easingFunction = tools.bind(easingObj.linear, easingObj),
 
         /*当前动画完成后，继续执行的链表动画*/
             _chainedAnimate = [],
@@ -130,67 +126,18 @@ define(function (require) {
         /*动画是否全部完成，包括链表中的动画*/
             _isCompleted = false,
 
-        /*动画是否循环执行*/
-            _isLoop = false,
-
-        /*动画循环次数*/
-            _loopCount = 1,
-
-        /*保存动画循环次数,在重启动画时，恢复 _loopCount */
-            _loopCount_Backup = 1,
-
-        /*动画重复次数*/
-            _repeatCount = 1,
-
-        /*保存动画的重复次数，在重启动画时，恢复 _repeatCount */
-            _repeatCount_Backup = 1,
-
-        /*动画重复,不限次数*/
-            _repeatForover = false,
-
         /*暂停的时长*/
             _pauseStart = 0,
             _pauseEnd = 0,
             _pauseDuration = 0;
 
-        /*是否是在链表动画中*/
-        this._inChained = false;
-
         /* 唯一识别码*/
         this._guid = tools.newId();
-
-        /*当前动画的父级动画 */
-        this.parentAnimate = undefined;
 
         function stopStep() {
             _isUpdateStep = false;
         }
 
-        /*
-         * 检测是否对animate产生循环引用
-        */
-        function isLoopReference(animate) {
-            if (tools.isUndefined(this.parentAnimate)) {
-                return false;
-            }
-            else if (this.parentAnimate._guid == animate._guid) {
-                return true;
-            }
-            else {
-                return arguments.callee.call(this.parentAnimate, animate);
-            }
-        }
-        /*
-         *遍历链表动画数组
-        */
-        function eachChainedAnimate(func) {
-            for (var i = 0, ci; ci = _chainedAnimate[i]; i++) {
-
-                func.call(null, ci);
-
-            }
-
-        }
         /*
          * 设置动画的生命周期
         */
@@ -198,61 +145,6 @@ define(function (require) {
             _duration = duration;
             return this;
         }
-
-        /*
-        * 动画是否循环执行，与repeat互斥。
-        */
-        this.loop = function (count) {
-
-            /*循环次数*/
-            _loopCount = tools.isNumber(count) && count > 0 ? count : 0;
-            _loopCount_Backup = _loopCount;
-
-            /*是否不限次数的循环*/
-            _isLoop = tools.isNumber(count) && count <0 ? true : false;
-
-            /*动画循环，动画的重复失效*/
-            _repeatCount = _loopCount > 0 ? 0 : _repeatCount;
-            _repeatForover = _isLoop || _loopCount > 0 ? false : _repeatForover;
-            return this;
-        }
-        /*
-       * 动画是否重复执行，与loop互斥。
-       */
-        this.repeat = function (count) {
-
-            /*重复次数*/
-            _repeatCount = tools.isNumber(count) && count > 0 ? count : 0;
-            _repeatCount_Backup = _repeatCount;
-
-            /*是否不限次数的重复*/
-            _repeatForover = tools.isNumber(count) && count < 0 ? true : false;
-
-            /*动画重复，动画的循环失效*/
-            _loopCount = _repeatCount > 0 ? 0 : _loopCount;
-            _isLoop = _repeatForover || _repeatCount > 0 ? false : _isLoop;            
-            return this;
-        }
-
-
-        /*
-         * 重新开始链表动画
-        */
-        this.restartChainedAnimate = function () {
-            this.restart();
-
-            eachChainedAnimate(function (ci) {
-                ci.restartChainedAnimate();
-
-            });
-        }
-        /*
-         * 返回动画的链表动画
-        */
-        this.getAllChainedAnimate = function () {
-            return _chainedAnimate;
-        }
-
         /*指定属性的初始值*/
         this.from = function (sPropreties) {
             _startPropreties = tools.clone(sPropreties);
@@ -274,6 +166,7 @@ define(function (require) {
             else {
                 _easingFunction = easingObj.linear;
             }
+            _easingFunction = tools.bind(_easingFunction, easingObj)
             return this;
         }
         /* 启动动画，只用在启动动画时使用一次*/
@@ -291,10 +184,7 @@ define(function (require) {
             _isTrigger = false;
             _isUpdateStep = false;
             _startTime = undefined;
-            eachChainedAnimate(function (ci) {
-                ci.stop();
 
-            });
             return this;
         }
 
@@ -307,9 +197,7 @@ define(function (require) {
             _loopCount = _loopCount_Backup;
             _animateState = animateStates.START;
             _eventHandler.notifyByKey("start");
-            eachChainedAnimate(function (ci) {
-                ci.restart();
-            });
+
             return this;
         }
         /*
@@ -325,7 +213,7 @@ define(function (require) {
             /*
              *动画只有处于running或completed状态时，暂停才生效
             */
-            if (_animateState == animateStates.RUNNING || _animateState == animateStates.COMPLETETED) {
+            if (_animateState == animateStates.RUNNING /*|| _animateState == animateStates.COMPLETETED*/) {
 
                 _animateState = animateStates.PAUSE;
 
@@ -333,9 +221,7 @@ define(function (require) {
 
                 _pauseStart = Date.now();
 
-                eachChainedAnimate(function (ci) {
-                    ci.pause();
-                });
+
             }
             return this;
         }
@@ -351,11 +237,6 @@ define(function (require) {
             if (_animateState == animateStates.PAUSE) {
                 _startTime = _startTime + _pauseDuration
             }
-            eachChainedAnimate(function (ci) {
-                ci.active();
-
-            });
-
             return this;
         }
         /*
@@ -389,6 +270,7 @@ define(function (require) {
             }
             return this;
         }
+
         /*动画启动时的回调函数*/
         this.onstart = function (func) {
             if (tools.isFunction(func)) {
@@ -396,25 +278,7 @@ define(function (require) {
             }
             return this;
         }
-        /*
-         * 添加动画链,不能添加自身到动画链表以及循环引用
-        */
-        this.chainedAnimate = function (animate) {
-            if (animate instanceof AnimateCore && this._guid != animate._guid && !isLoopReference(animate)) {
-                _chainedAnimate.push(animate);
-                animate._inChained = true;
-                animate.parentAnimate = this;
-            }
-            else {
-                log.write("Error: 1: Argument 'animate' is not an instance of 'AnimateCore'",
-                                  "       2: Object's '_guid' proprety is same",
-                                  "       3: Loop Reference"
-                                  , "Path:core.js"
-                                  , "function:chainedAnimate");
 
-            }
-            return this;
-        }
         /*
          *获取动画的运行状态
         */
@@ -422,25 +286,38 @@ define(function (require) {
             return _animateState;
         }
         /*
-         * 判定动画是否是在链表动画中
+        * 判定动画（包括链表动画）是否完成*
         */
-        this.isInChained = function () {
-            return this._inChained;
-        }
-        /*
-        * 判定动画（包括链表动画）是否完成        *
-        */
-        this.isChainedAnimateCompleted = function () {
+        this.isCompleted = function () {
             var isCompleted = this.getAnimateStates() == animateStates.COMPLETETED;
-
-            eachChainedAnimate(function (ci) {
-                isCompleted = isCompleted && ci.isChainedAnimateCompleted();
-
-            });
-
             return isCompleted;
         }
-        this.update = function (time) {
+        /*
+        * 反转当前动画
+        */
+        this.animateReverse = function () {
+            var animate = new AnimateCore();
+            animate.setDuration(_duration)
+                   .from(_endPropreties)
+                   .to(_startPropreties)
+                   .delay(_delayTime)
+                   .easing(_easingFunction);
+
+            var steps = _eventHandler.getHandlerByKey("step");
+            if (!tools.isUndefined(steps) && steps.length > 0) {
+                for (var i = 0; i < steps.length; i++) {
+                    animate.onstep(steps[i]);
+                }
+            }
+            return animate;
+        }
+        /*
+        * 每帧动画执行
+        */
+        this.update = function () {
+            _update(Date.now());
+        }
+        var _update = function (time) {
             var elapsed,
 
                 property,
@@ -492,48 +369,93 @@ define(function (require) {
             }
 
             if (elapsed == _duration) {
-
-                if (_repeatCount > 0 || _repeatForover) {
-
-                    _repeatCount--;
-
-                    /*重复执行*/
-                    _startTime = 0;
-
+                /*
+                 *这里的stop主要用于停止对step事件的执行。
+                 */
+                stopStep();
+                /*
+                 *动画完成后保证，completed的CallBack只执行一次
+                 */
+                if (_animateState != animateStates.COMPLETETED) {
+                    _animateState = animateStates.COMPLETETED;
+                    _eventHandler.notifyByKey("completed");
                 }
-                else if (_loopCount > 0 || _isLoop) {
-                    /*循环动画*/
-                    _loopCount--;
-                    _startTime = 0;
-                    var tmp = tools.clone(_startPropreties);
-                    _startPropreties = tools.clone(_endPropreties);
-                    _endPropreties = tmp;
-                }
-                else {
-
-                    /*
-                     *这里的stop主要用于停止对step事件的执行。
-                     */
-                    stopStep();
-
-                    /*
-                     *动画完成后保证，completed的CallBack只执行一次
-                     */
-                    if (_animateState != animateStates.COMPLETETED) {
-                        _animateState = animateStates.COMPLETETED;
-                        _eventHandler.notifyByKey("completed");
-                    }
-                    /*
-                     * 执行当前动画中的动画链表
-                     */
-                    eachChainedAnimate(function (ci) {
-                        if (ci._inChained) {
-                            ci.update(Date.now());
-                        }
-                    });
-                }
+                // }
             }
         }
     }
-    return AnimateCore;
+
+    function Animate(segments) {
+
+        this.animateCore = null;
+
+        return this.init(segments);
+
+    }
+
+    Animate.prototype = function () {
+        return {
+            /*
+             * 创建AnimateCore对象
+             *
+             * @param:{segment}            
+                segmnet = {
+                    duration: 1000,          //动画的生命周期
+                    from: {},                //初始变化属性       
+                    to: {},                  //目标变化属性 
+                    delay: 0,                //动画的延迟执行时间
+                    easing: "",              //缓动函数
+                    onstep: null,            //动画变化过程中的更新操作
+                    oncompleted: null        //动画完成后的回调
+                }
+             *
+             *
+             * @param:{defauls} 同 {segment}  
+            */
+            init: function (segment) {
+                var _segmnet = {
+                    duration: 1000,
+                    from: {},
+                    to: {},
+                    delay: 0,
+                    loop: 0,
+                    repeat: 0,
+                    easing: "",
+                    onstep: null,
+                    oncompleted: null
+                }, aniCore;
+
+                segment = tools.extend(_segmnet, segment || {});
+                aniCore = new AnimateCore(segment.duration);
+                aniCore.from(segment.from)
+                              .to(segment.to)
+                              .onstep(segment.onstep)
+                              .oncompleted(segment.oncompleted)
+                              .delay(segment.delay)
+                              .easing(segment.easing);
+
+                this.animateCore = aniCore;
+                //var that = this;
+                //var _prototype = Animate.prototype;
+                //for (var pro in aniCore) {
+                //    if (!_prototype.hasOwnProperty(pro)) {
+                //        if (tools.isFunction(aniCore[pro])) {
+                //            _prototype[pro] = (function (pro, obj) {
+                //                return function () {
+                //                    return obj.animateCore[pro].apply(obj.animateCore, arguments);
+                //                }
+                //            })(pro, this)
+                //        }
+                //        else {
+                //            _prototype[pro] = that.animateCore[pro];
+                //        }
+                //    }
+                //}
+
+                return aniCore;
+            }
+        }
+    }();
+    return Animate;
+
 });

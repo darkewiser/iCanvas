@@ -1,6 +1,6 @@
 ﻿/* 公共辅助函数
  *
- * @author MingLi (, v-minggu@microsoft.com)
+ * @author MingLi (v-minggu@microsoft.com)
  *
  * getType: 获取对象的类型
  * isNumber:判定对象是否是Number
@@ -326,6 +326,10 @@ define(function (require) {
             return func;
         }
     }
+
+    /*
+     * 生成GUID 
+    */
     function newId() {
         function S4() {
             return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
