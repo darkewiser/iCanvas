@@ -1,0 +1,5 @@
+D:\internal_projects\MSP.iCanvasFramework\animate\bin\animate.dll
+D:\internal_projects\MSP.iCanvasFramework\animate\bin\animate.pdb
+D:\internal_projects\MSP.iCanvasFramework\animate\obj\Debug\animate.csprojResolveAssemblyReference.cache
+D:\internal_projects\MSP.iCanvasFramework\animate\obj\Debug\animate.dll
+D:\internal_projects\MSP.iCanvasFramework\animate\obj\Debug\animate.pdb

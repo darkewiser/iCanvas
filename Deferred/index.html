@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="js/event.js"></script>
+    <script src="js/deferred.js"></script>
+    <style>
+        #container {
+            width:425px;
+            height:425px;
+            border:solid 1px black;
+            margin:15px;
+            background-color:azure;
+        }
+            #container div {
+                width: 98px;
+                height: 98px;
+                border: 1px solid black;
+                float:left;
+                margin-left:5px;
+                margin-top:5px;
+                font-family:'Segoe UI';
+                font-size:12px;
+                background-color:lightblue;
+            }
+    </style>
+</head>
+<body>
+    <input id="click" type="button" value="click" />
+    <span id="info"></span>
+    <div id="container"></div>
+    <script type="text/javascript">
+        var _click = document.getElementById("click");
+        var _span = document.getElementById("info");
+
+        var _evt = new EventHandler();
+        
+        var controller = function () {
+            var _container = document.getElementById("container");
+            var _def = new Deferred();
+
+            return {
+                start: function () {
+                    for (var i = 0; i < 16; i++) {
+                        var _dely = Math.random() * 10000;
+                        setTimeout(function (dely, index) {
+                            return function () {
+                                var _div = document.createElement("DIV");
+                                _div.innerHTML = "This is No." + index + "<br />Spent " + (dely / 1000).toFixed(3) + " seconds to finish";
+                                _container.appendChild(_div);
+                            }
+                        }(_dely, i), _dely);
+                    }
+
+                    this.monitor();
+                }
+                , monitor: function() {
+                    var _count=0;
+                    for (var i = 0, ci; ci = _container.childNodes[i]; i++) {
+                        if (ci.tagName == "DIV") {
+                            _count++;
+                        }
+                    }
+
+                    if (_count == 16) {
+                        _def.resolve(_count);
+                        return;
+                    }
+
+                    _def.progress(_count);
+                    var _args = arguments;
+                    var that = this;
+                    setTimeout(function () {_args.callee.apply(that,arguments) },300);
+                }
+                , proxy:_def.promise
+            }
+        }();
+
+
+        _evt.once("click", function () {
+            controller.start();
+        });
+
+        _click.onclick = function () {
+            _evt.trigger("click");
+        }
+
+        controller.proxy.then(function (count) { _span.innerHTML = "All Done." + count + " divs have been created" }
+            , undefined
+            , function (count) {
+                _span.innerHTML = count + " divs have been created," + (16 - count) + " are in progress";
+            });
+
+    </script>
+</body>
+</html>

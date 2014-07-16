@@ -1,0 +1,5 @@
+D:\internal_projects\MSP.iCanvasFramework\Deferred\bin\Deferred.dll
+D:\internal_projects\MSP.iCanvasFramework\Deferred\bin\Deferred.pdb
+D:\internal_projects\MSP.iCanvasFramework\Deferred\obj\Debug\Deferred.csprojResolveAssemblyReference.cache
+D:\internal_projects\MSP.iCanvasFramework\Deferred\obj\Debug\Deferred.dll
+D:\internal_projects\MSP.iCanvasFramework\Deferred\obj\Debug\Deferred.pdb

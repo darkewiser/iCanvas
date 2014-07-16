@@ -1,0 +1,132 @@
+﻿div {
+    width: 100px;
+    height: 100px;
+
+}
+
+.circle {
+    position: absolute;
+    top: 50px;
+    left: 500px;
+    border-radius: 50% /50%;
+}
+
+.red2black {
+    background-image: -webkit-linear-gradient(to top,red,black);
+    background-image: -moz-linear-gradient(to top,red,black);
+    background-image: -o-linear-gradient(to top,red,black);
+    background-image: linear-gradient(to top,red,black);
+}
+
+.green2yellow {
+    background-image: -webkit-linear-gradient(to top,green,yellow);
+    background-image: -moz-linear-gradient(to top,green,yellow);
+    background-image: -o-linear-gradient(to top,green,yellow);
+    background-image: linear-gradient(to top,green,yellow);
+}
+
+.green2white {
+    background-image: -webkit-linear-gradient(to top,green,white);
+    background-image: -moz-linear-gradient(to top,green,white);
+    background-image: -o-linear-gradient(to top,green,white);
+    background-image: linear-gradient(to top,green,white);
+}
+
+
+.rect {
+    position: absolute;
+    top: 300px;
+    left: 0;
+    -webkit-transform-origin: top;
+    -moz-transform-origin: top;
+    -o-transform-origin: top;
+    transform-origin: top;
+}
+
+input {
+    position: fixed;
+    width: 80px;
+    height: 40px;
+    font-size: 20px;
+    text-align: center;
+    border: none;
+    user-select: none;
+    outline-color: green;
+}
+.left_100 {
+    left: -100px;
+}
+
+.left0 {
+    left: 0px;
+}
+
+.left50 {
+    left: 50px;
+}
+
+.left100 {
+    left: 100px;
+}
+
+.left150 {
+    left: 150px;
+}
+
+.left200 {
+    left: 200px;
+}
+
+.left250 {
+    left: 250px;
+}
+
+.left300 {
+    left: 300px;
+}
+
+.left350 {
+    left: 300px;
+}
+
+.left400 {
+    left: 300px;
+}
+
+
+
+.top0 {
+    top: 0px;
+}
+
+.top50 {
+    top: 50px;
+}
+
+.top100 {
+    top: 100px;
+}
+
+.top150 {
+    top: 150px;
+}
+
+.top200 {
+    top: 200px;
+}
+
+.top250 {
+    top: 250px;
+}
+
+.top300 {
+    top: 300px;
+}
+
+.top350 {
+    top: 300px;
+}
+
+.top400 {
+    top: 300px;
+}

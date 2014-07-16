@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <style>
+        ul {
+            width:100%;
+        }
+            ul li {
+             height:18px;
+            }
+
+        .par {
+            width:200px;
+            height:110px;
+            border:solid 1px black;
+            overflow:hidden;
+            margin:30px;
+        }
+
+    </style>
+    <script src="js/tools/util.js"></script>
+    <script src="js/tools/observer.js"></script>
+    <script src="js/tools/log.js"></script>
+    <script src="js/tools/requestAnimationFrame.js"></script>
+    <script src="js/tools/timer.js"></script>
+    <script src="js/tools/easing.js"></script>
+    <script src="js/lib/core.js"></script>
+    <script src="js/lib/animate.js"></script>
+    <script src="js/maquee.js"></script>
+</head>
+<body>
+      <div class="par">
+        <ul id="co">
+            <li>0</li>
+            <li>1</li>
+            <li>2</li>
+            <li>3</li>
+            <li>4</li>
+            <li>5</li>
+            <li>6</li>
+            <li>7</li>
+            <li>8</li>
+            <li>9</li>
+        </ul>
+    </div>
+
+      <div class="par">
+        <ul id="co1">
+            <li>10</li>
+            <li>11</li>
+            <li>12</li>
+            <li>13</li>
+            <li>14</li>
+            <li>15</li>
+            <li>16</li>
+            <li>17</li>
+            <li>18</li>
+            <li>19</li>
+        </ul>
+    </div>
+
+     <div class="par">
+        <ul id="co2">
+            <li>20</li>
+            <li>21</li>
+            <li>22</li>
+            <li>23</li>
+            <li>24</li>
+            <li>25</li>
+            <li>26</li>
+            <li>27</li>
+            <li>28</li>
+            <li>29</li>
+        </ul>
+    </div>
+
+    <script type="text/ecmascript">
+        marqueeObj.append("co",18);
+        marqueeObj.append("co1",18,2000);
+        marqueeObj.append("co2",18,3000);
+        marqueeObj.start();
+    </script>
+    
+</body>
+</html>

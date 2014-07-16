@@ -1,0 +1,173 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+        <style type="text/css">
+       
+
+
+        #container,#container2,container3 {
+            width:200px;
+            height:200px;
+            margin:50px;
+            border:1px solid darkgray;
+            position:relative;
+            line-height:200px;
+            float:left;
+            /*-webkit-animation-name: rotate-start;
+            -webkit-animation-duration: 1.5s;
+            -webkit-animation-iteration-count: infinite;
+            animation-name: rotate-start;
+            animation-duration: 1.5s;
+            animation-iteration-count: infinite;*/
+        }
+
+        @-webkit-keyframes rotate-start {
+            0% {
+                -webkit-transform:perspective(500px) rotateX(0deg);
+                
+            }
+
+            100% {
+                -webkit-transform:perspective(500px) rotateX(180deg);
+                
+            }
+        }
+
+        @keyframes rotate-start {
+            0% {
+                transform:perspective(500px) rotateX(0deg);
+                
+            }
+
+            100% {
+                transform:perspective(500px) rotateX(180deg);
+                
+            }
+        }
+
+        #container div,#container2 div {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color:aqua;
+            text-align: center;
+            vertical-align:central;
+            font-size: 30px;
+            display: inline-block;
+            font-family: 'Segoe UI';
+        }
+
+            #listbox {
+                width:300px;
+                height:220px;
+                background-color:#6b5d5d;
+                float:left;
+                margin:50px;
+            }
+
+            li div {
+                width:100%;
+                overflow:hidden;            
+            }
+
+        
+
+    </style>
+    <link href="css/rowswitcher.css" rel="stylesheet" />
+    <script src="js/tools/util.js"></script>
+    <script src="js/tools/observer.js"></script>
+    <script src="js/tools/log.js"></script>
+    <script src="js/tools/requestAnimationFrame.js"></script>
+    <script src="js/tools/timer.js"></script>
+    <script src="js/tools/easing.js"></script>
+    <script src="js/lib/core.js"></script>
+    <script src="js/lib/animate.js"></script>
+    <script src="js/animationMgr.js"></script>
+    <script src="js/blockRotater.js"></script>
+    <script src="js/lineSwitcher.js"></script>
+    <title></title>
+</head>
+<body>
+    <div class="zt-list">
+    <ul  id="listbox">
+    </ul>
+        <ul id="sourcelist" style="display: none" timeStamp="a">
+            <li>
+
+                <span class="num">1</span>
+                <span class="word">国家863计划成果北京巡回展</span>
+                <span class="xing"></span>
+
+            </li>
+            <li>
+                <span class="num">2</span>
+                <span class="word">中国核工业集团</span>
+                <span class="xing"></span>
+
+            </li>
+            <li>
+
+                <span class="num">3</span>
+                <span class="word">深圳迈瑞生物医疗电子股份有限公司</span>
+                <span class="xing"></span>
+
+            </li>
+            <li>
+
+                <span class="num">4</span>
+                <span class="word">中国科学院合肥物质科学研究院</span>
+                <span class="xing"></span>
+
+            </li>
+            <li>
+
+                <span class="num">5</span>
+                <span class="word">闪联信息技术工程中心有限公司</span>
+                <span class="xing"></span>
+
+            </li>
+            <li>
+
+                <span class="num">6</span>
+                <span class="word">厦门大学国家传染病诊断试剂与疫苗</span>
+                <span class="xing"></span>
+
+            </li>
+        </ul>
+    </div>
+    <div id="container">
+        <div>59</div>
+        <div>60</div>
+        <div>61</div>
+        <div>62</div>
+        <div>63</div>
+        <div>64</div>
+    </div>
+
+    <ul id="container2">
+        <li>70</li>
+        <li>71</li>
+        <li>72</li>
+        <li>73</li>
+        <li>74</li>
+        <li>75</li>
+    </ul>
+    
+    <script type="text/ecmascript">
+        var boms1 = new blockRotater("container",0);
+        var boms2 = new blockRotater("container2", 0, { tagName: "LI" });
+
+        ////execution
+        var _mvc = new mvcHandler("listbox", "sourcelist");
+        _mvc.init();
+
+
+
+        animationMgr.loop();
+        animationMgr.start();
+
+
+
+    </script>
+</body>
+</html>
